@@ -1,0 +1,22 @@
+[package]
+name = "mcp-bridge"
+version = "0.1.0"
+edition = "2021"
+description = "Lightweight Rust replacement for `npx mcp-remote` — stdio↔HTTP MCP transport bridge"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+eventsource-stream = "0.2"
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "io-std", "io-util", "sync", "time", "signal"] }
+url = "2"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
