@@ -160,3 +160,9 @@ Dependencies: `tokio`, `reqwest` (rustls, no OpenSSL), `eventsource-stream`, `cl
 - [**Hermes Agent**](https://github.com/nousresearch/hermes-agent) by [Nous Research](https://github.com/NousResearch) — the agent runtime this bridge was built for.
 - [**mcp-remote**](https://www.npmjs.com/package/mcp-remote) — the Node tool whose CLI this mirrors and whose memory footprint motivated the rewrite.
 - [**Model Context Protocol**](https://modelcontextprotocol.io) — transport spec ([2025-03-26](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)).
+
+---
+
+## License
+
+[Apache License 2.0](LICENSE) © 2026 Miha Tiutin.

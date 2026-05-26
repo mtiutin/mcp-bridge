@@ -3,6 +3,8 @@ name = "mcp-bridge"
 version = "0.1.0"
 edition = "2021"
 description = "Lightweight Rust replacement for `npx mcp-remote` — stdio↔HTTP MCP transport bridge"
+license = "Apache-2.0"
+repository = "https://github.com/mtiutin/mcp-bridge"
 
 [dependencies]
 anyhow = "1"
