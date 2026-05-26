@@ -8,18 +8,18 @@ It exists because the Node version was eating the host alive.
 
 ## The problem we hit with Hermes
 
-Our agent stack runs [**Hermes Agent**](https://github.com/NousResearch/hermes-agent) (by [Nous Research](https://github.com/NousResearch)) on a single 7.6 GB box. Hermes connects to ~16 MCP servers — ClickHouse, Postgres, Metabase, TRON tooling, a papers corpus, several remote HTTP MCPs, and so on.
+Our agent stack runs [**Hermes Agent**](https://github.com/NousResearch/hermes-agent) (by [Nous Research](https://github.com/NousResearch)) on a single, memory-constrained host. Hermes connects to a couple dozen MCP servers — a mix of native streamable-HTTP backends and a handful that only speak legacy SSE.
 
 Hermes can talk to a streamable-HTTP MCP server directly (`mcp_servers.<name>.url`). But for any server that only speaks the **legacy SSE** transport, the agent needs a stdio bridge subprocess in between. The canonical bridge is `npx mcp-remote`, a Node program.
 
 That bridge turned out to be the single most expensive thing on the box:
 
 - **~95 MB resident per instance.** Six legacy-SSE backends meant **~570 MB** just in bridge processes — for what is, functionally, a byte shuffler between a pipe and an HTTP socket.
-- **The gateway kept getting OOM-killed.** Two things compounded: the gateway unit shipped with `oom_score_adj=100`, marking it as the kernel's *preferred* victim, and the bridge processes left no headroom. Under any memory pressure, the kernel killed the gateway — taking down every channel (WhatsApp, Signal) at once.
+- **The gateway kept getting OOM-killed.** Two things compounded: the gateway unit shipped with `oom_score_adj=100`, marking it as the kernel's *preferred* victim, and the bridge processes left no headroom. Under any memory pressure, the kernel killed the gateway — taking down every messaging channel at once.
 
 We fixed the operational side two ways:
 
-1. **Moved most MCPs off bridges entirely.** Where the upstream supports streamable-HTTP, Hermes connects directly via `url:` + `headers:` — no subprocess at all. (We even rebuilt `postgres-mcp` from HEAD to get native streamable-HTTP and retired its bridge.)
+1. **Moved most MCPs off bridges entirely.** Where the upstream supports streamable-HTTP, Hermes connects directly via `url:` + `headers:` — no subprocess at all. (In one case we rebuilt an upstream server from HEAD to pick up native streamable-HTTP and retired its bridge.)
 2. **Replaced the remaining bridges with this binary.** For the backends that genuinely only speak legacy SSE, `mcp-bridge` does the same job as `npx mcp-remote` at **~2 MB resident** instead of ~95 MB.
 
 We also set `OOMScoreAdjust=-500` on the gateway unit so it's no longer the kernel's first pick. Net effect: the bridge layer went from ~570 MB to a couple of MB, and the OOM kills stopped.
